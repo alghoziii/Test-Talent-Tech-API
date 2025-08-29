@@ -1,33 +1,37 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "github.com/joho/godotenv"
-    "e-ticketing/database"
-    "e-ticketing/controllers"
-    "e-ticketing/middleware"
-    "github.com/gorilla/mux"
+	"log"
+	"net/http"
+	"e-ticketing/database"
+	"e-ticketing/controllers"
+	"e-ticketing/middleware"
+	"github.com/joho/godotenv"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-    // Load environment variables from .env file
-    if err := godotenv.Load(); err != nil {
-        log.Println("No .env file found, using system environment variables")
-    }
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
+		log.Println("File .env tidak ditemukan, menggunakan environment variables system")
+	}
 
-    // Initialize database
-    database.InitDB()
-    defer database.CloseDB()
+	// Initialize database
+	database.InitDB()
+	defer database.CloseDB()
 
-    router := mux.NewRouter()
+	// Create router
+	router := mux.NewRouter()
 
-    // Public routes
-    router.HandleFunc("/api/login", controllers.Login).Methods("POST")
+	// Public routes
+	router.HandleFunc("/api/login", controllers.Login).Methods("POST")
 
-    // Protected routes
-    router.HandleFunc("/api/terminals", middleware.JWTMiddleware(controllers.CreateTerminal)).Methods("POST")
+	// Protected routes
+	router.HandleFunc("/api/terminals", middleware.JWTMiddleware(controllers.CreateTerminal)).Methods("POST")
 
-    log.Println("Server starting on :8080")
-    http.ListenAndServe(":8080", router)
+	// Start server
+	log.Println("Server berjalan di port :8080")
+	if err := http.ListenAndServe(":8080", router); err != nil {
+		log.Fatal("Server error:", err)
+	}
 }
